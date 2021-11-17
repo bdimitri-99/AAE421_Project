@@ -33,9 +33,9 @@ TODO:
 %						'altitude hold', 'heading hold' 'circle track'
 
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
-simulate_blimp(		 'di',		  true,			 true,      20, 'altitude hold');
-simulate_blimp(		'dii',		  true,			 true,      20,  'heading hold');
-simulate_blimp(	   'diii',		  true,			 true,      20,  'circle track');
+simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
+simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
+simulate_blimp(	   'diii',		  true,			 true,     100,  'circle track');
 
 
 function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
@@ -44,9 +44,9 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	options = simset('SrcWorkspace','current');
 
 	% Gains found user PID Tuner
-	[Kp_a, Ki_a, Kd_a, N_a] = deal(5, 1, 1, 100);
-	[Kp_h, Ki_h, Kd_h, N_h] = deal(5, 1, 1, 100);
-	[Kp_f, Ki_f, Kd_f, N_f] = deal(5, 1, 1, 100);
+	[Kp_a, Ki_a, Kd_a, N_a] = deal(10, 5, 2, 100);
+	[Kp_h, Ki_h, Kd_h, N_h] = deal(40, 0, 1, 100);
+	[Kp_f, Ki_f, Kd_f, N_f] = deal(50, 50, 0, 100);
 
 	% freq to switch between velo and heading control [hz]
 	switch_feq	= 2;	
@@ -74,7 +74,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 
 	if strcmp(opp_mode, 'altitude hold')
 		opp_mode		= 1;
-		target_alt		= 255;	% [m]
+		target_alt		= 1;	% [m]
 		target_head		= 0;	% [rad]
 		target_speed	= 0;	% [m/s]	
 		ya_goal			= target_alt * ones(n, 1);
@@ -84,7 +84,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	elseif strcmp(opp_mode,'heading hold')
 		opp_mode		= 2;
 		target_alt		= 1;	% [m]
-		target_head		= 0;	% [rad]
+		target_head		= pi/2;	% [rad]
 		target_speed	= 0;	% [m/s]
 		ya_goal			= target_alt * ones(n, 1);
 		yh_goal			= target_head * ones(n, 1);
@@ -92,7 +92,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	
 	elseif strcmp(opp_mode, 'circle track')
 		opp_mode		= 3;   
-		target_alt		= 1;	% [m]
+		target_alt		= 0;	% [m]
 		target_speed	= 0.3;	% [m/s]
 		slope			= 1/(radius*target_speed); % [rad/s]
 		ya_goal			= target_alt * ones(n, 1);
