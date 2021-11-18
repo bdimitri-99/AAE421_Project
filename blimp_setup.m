@@ -16,14 +16,7 @@ TODO:
 	- Plot root locus with proportional gain Kp > 0 
 	- Automate pulling stats for SS_error, overshoot and settling time
 	- Don't know how the 0-255 control input relates to a target position
-	- Need to use PID Tuner to seperatly tune each of the 3 subsystems
-		- Once we get 3 sets of gains add them into the
-		  'simulate_blimp' function where specified
-	- Update plotting and telemetry for 'circle track' 
-		- Need to do some math in this file or change simulink file to 
-		  convert velocity and heading data to radius and theta data.
-		- Use simulated vs actual R-theta data to get cumulative
-		  distance error
+	- Compute cumulative distance error for circle tracking
 %}
 
 
@@ -35,7 +28,7 @@ TODO:
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
 simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
 simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
-simulate_blimp(	   'diii',		  true,			 true,     100,  'circle track');
+simulate_blimp(	   'diii',		  true,			 true,     200,  'circle track');
 
 
 function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
@@ -44,12 +37,15 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	options = simset('SrcWorkspace','current');
 
 	% Gains found user PID Tuner
-	[Kp_a, Ki_a, Kd_a, N_a] = deal(10, 5, 2, 100);
-	[Kp_h, Ki_h, Kd_h, N_h] = deal(40, 0, 1, 100);
-	[Kp_f, Ki_f, Kd_f, N_f] = deal(50, 50, 0, 100);
+	[Kp_a, Ki_a, Kd_a, N_a] = deal(38, 16, 74, 1.5);
+	[Kp_h, Ki_h, Kd_h, N_h] = deal(75, 0.05, -11, 3.44);
+	[Kp_f, Ki_f, Kd_f, N_f] = deal(96, 17, -67.5, 1.1);
 
 	% freq to switch between velo and heading control [hz]
-	switch_feq	= 2;	
+	switch_freq		= 5;
+
+	% Percent to weight controller use on speed vs heading 100 = all speed
+	switch_weight	= 75;
 
 	%% DEFINE THE TRANSFER FUNCTIONS
 	s	= tf('s');
@@ -85,7 +81,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		opp_mode		= 2;
 		target_alt		= 1;	% [m]
 		target_head		= pi/2;	% [rad]
-		target_speed	= 0;	% [m/s]
+		target_speed	= 0.3;	% [m/s]
 		ya_goal			= target_alt * ones(n, 1);
 		yh_goal			= target_head * ones(n, 1);
 		yf_goal			= target_speed * ones(n, 1);
@@ -94,7 +90,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		opp_mode		= 3;   
 		target_alt		= 0;	% [m]
 		target_speed	= 0.3;	% [m/s]
-		slope			= 1/(radius*target_speed); % [rad/s]
+		slope			= target_speed/radius; % [rad/s]
 		ya_goal			= target_alt * ones(n, 1);
 		yh_goal			= t_goal * slope;
 		yf_goal			= target_speed * ones(n, 1);
@@ -107,47 +103,61 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	ya		= results.ya.signals.values;
 	yh		= results.yh.signals.values;
 	yf		= results.yf.signals.values;
+	xPos	= results.xPos.signals.values;
+	yPos	= results.yPos.signals.values;
+
+	% If we simulated more than 1 circle grab the first circle
+	xPos	= xPos(yh<2*pi);
+	yPos	= yPos(yh<2*pi);
 
 	%% PLOT AND SAVE SIMULAION OUTPUT
 	if not(isfolder('figures'))
 		mkdir figures
 	end
 	
-	fig = figure();
-	heading		= strcat("Part ", part_num, ": Altitude (m)");
-	savename	= strcat("Part", part_num, "_Altitude");
-	hold on
-	set(gca, 'Box', 'on');
-	title(heading, 'Fontsize', 12);
-	xlabel('Time (s)', 'Fontsize', 10);
-	ylabel('Altitude (m)', 'Fontsize', 10);
-	plot(t_goal, ya_goal, t_sim, ya,  'linewidth', 1);
-	legend('Target Values', 'Simulated Values');
-	save_figure(fig, savename, 'figures\');
+	if opp_mode == 1
+		fig = figure();
+		heading		= strcat("Part ", part_num, ": Altitude (m)");
+		savename	= strcat("Part", part_num, "_Altitude");
+		hold on
+		set(gca, 'Box', 'on');
+		title(heading, 'Fontsize', 12);
+		xlabel('Time (s)', 'Fontsize', 10);
+		ylabel('Altitude (m)', 'Fontsize', 10);
+		plot(t_goal, ya_goal, t_sim, ya,  'linewidth', 1);
+		legend('Target Values', 'Simulated Values');
+		save_figure(fig, savename, 'figures\');
+	end
 	
-	fig = figure();
-	heading		= strcat("Part ", part_num, ": Heading");
-	savename	= strcat("Part", part_num, "_Heading");
-	hold on
-	set(gca, 'Box', 'on');
-	title(heading, 'Fontsize', 12);
-	xlabel('Time (s)', 'Fontsize', 10);
-	ylabel('Heading (rad)', 'Fontsize', 10);
-	plot(t_goal, yh_goal, t_sim, yh,  'linewidth', 1);
-	legend('Target Values', 'Simulated Values');
-	save_figure(fig, savename, 'figures\');
+	if opp_mode == 2 
+		fig = figure();
+		heading		= strcat("Part ", part_num, ": Heading");
+		savename	= strcat("Part", part_num, "_Heading");
+		hold on
+		set(gca, 'Box', 'on');
+		title(heading, 'Fontsize', 12);
+		xlabel('Time (s)', 'Fontsize', 10);
+		ylabel('Heading (rad)', 'Fontsize', 10);
+		plot(t_goal, yh_goal, t_sim, yh,  'linewidth', 1);
+		legend('Target Values', 'Simulated Values');
+		save_figure(fig, savename, 'figures\');
+	end
 	
-	fig = figure();
-	heading		= strcat("Part ", part_num, ": Speed");
-	savename	= strcat("Part", part_num, "_Speed");
-	hold on
-	set(gca, 'Box', 'on');
-	title(heading, 'Fontsize', 12);
-	xlabel('Time (s)', 'Fontsize', 10);
-	ylabel('Speed (m/s)', 'Fontsize', 10);
-	plot(t_goal, yf_goal, t_sim, yf,  'linewidth', 1);
-	legend('Target Values', 'Simulated Values');
-	save_figure(fig, savename, 'figures\');
+	if opp_mode == 3
+		fig = figure();
+		heading		= strcat("Part ", part_num, ": Circle Tracking");
+		savename	= strcat("Part", part_num, "_Circl");
+		hold on
+		set(gca, 'Box', 'on');
+		title(heading, 'Fontsize', 12);
+		xlabel('X Position (m)', 'Fontsize', 10);
+		ylabel('Y Positin (m)', 'Fontsize', 10);
+		b	= viscircles([0, radius], radius)
+		a	= plot(xPos, yPos,  'linewidth', 1);
+		legend([a, b], {'Target Values', 'Simulated Values'});
+		save_figure(fig, savename, 'figures\');
+	end
+
 end
 
 
