@@ -28,7 +28,7 @@ TODO:
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
 simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
 simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
-simulate_blimp(	   'diii',		  true,			 true,     200,  'circle track');
+simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
 
 
 function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
@@ -152,8 +152,8 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		title(heading, 'Fontsize', 12);
 		xlabel('X Position (m)', 'Fontsize', 10);
 		ylabel('Y Positin (m)', 'Fontsize', 10);
-		b	= viscircles([0, radius], radius)
-		a	= plot(xPos, yPos,  'linewidth', 1);
+		a	= viscircles([0, radius], radius)
+		b	= plot(xPos, yPos,  'linewidth', 1);
 		legend([a, b], {'Target Values', 'Simulated Values'});
 		save_figure(fig, savename, 'figures\');
 	end
