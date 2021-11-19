@@ -44,8 +44,8 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	% freq to switch between velo and heading control [hz]
 	switch_freq		= 5;
 
-	% Percent to weight controller use on speed vs heading 100 = all speed
-	switch_weight	= 75;
+	% Changes weight of heading error
+	switch_weight	= .5;
 
 	%% DEFINE THE TRANSFER FUNCTIONS
 	s	= tf('s');
