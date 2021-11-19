@@ -45,7 +45,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	switch_freq		= 5;
 
 	% Changes weight of heading error
-	switch_weight	= .5;
+	switch_weight	= 20;
 
 	%% DEFINE THE TRANSFER FUNCTIONS
 	s	= tf('s');
