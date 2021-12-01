@@ -26,8 +26,8 @@ TODO:
 %						'altitude hold', 'heading hold' 'circle track'
 
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
-simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
-simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
+%simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
+%simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
 simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
 
 
@@ -109,6 +109,8 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	% If we simulated more than 1 circle grab the first circle
 	xPos	= xPos(yh<2*pi);
 	yPos	= yPos(yh<2*pi);
+	t_sim	= t_sim(yh<2*pi);
+	t_sim	= t_sim - t_sim(1);
 
 	%% PLOT AND SAVE SIMULAION OUTPUT
 	if not(isfolder('figures'))
@@ -126,7 +128,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		ylabel('Altitude (m)', 'Fontsize', 10);
 		plot(t_goal, ya_goal, t_sim, ya,  'linewidth', 1);
 		legend('Target Values', 'Simulated Values');
-		save_figure(fig, savename, 'figures\');
+		%save_figure(fig, savename, 'figures\');
 	end
 	
 	if opp_mode == 2 
@@ -140,7 +142,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		ylabel('Heading (rad)', 'Fontsize', 10);
 		plot(t_goal, yh_goal, t_sim, yh,  'linewidth', 1);
 		legend('Target Values', 'Simulated Values');
-		save_figure(fig, savename, 'figures\');
+		%save_figure(fig, savename, 'figures\');
 	end
 	
 	if opp_mode == 3
@@ -152,8 +154,34 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		title(heading, 'Fontsize', 12);
 		xlabel('X Position (m)', 'Fontsize', 10);
 		ylabel('Y Positin (m)', 'Fontsize', 10);
-		a	= viscircles([0, radius], radius)
+		a	= viscircles([0, radius], radius);
 		b	= plot(xPos, yPos,  'linewidth', 1);
+		legend([a, b], {'Target Values', 'Simulated Values'});
+		save_figure(fig, savename, 'figures\');
+
+		fig = figure();
+		heading		= strcat("Part ", part_num, ": Circle Tracking - X");
+		savename	= strcat("Part", part_num, "_Circl_x");
+		hold on
+		set(gca, 'Box', 'on');
+		title(heading, 'Fontsize', 12);
+		xlabel('Time (s)', 'Fontsize', 10);
+		ylabel('X Position (m)', 'Fontsize', 10);
+		a	= plot(t_sim, radius*sin(slope*t_sim),  'linewidth', 1);
+		b	= plot(t_sim, xPos,  'linewidth', 1);
+		legend([a, b], {'Target Values', 'Simulated Values'});
+		save_figure(fig, savename, 'figures\');
+
+		fig = figure();
+		heading		= strcat("Part ", part_num, ": Circle Tracking - Y");
+		savename	= strcat("Part", part_num, "_Circl_y");
+		hold on
+		set(gca, 'Box', 'on');
+		title(heading, 'Fontsize', 12);
+		xlabel('Time (s)', 'Fontsize', 10);
+		ylabel('Y Positin (m)', 'Fontsize', 10);
+		a	= plot(t_sim, radius*cos(slope*t_sim+pi)+radius,  'linewidth', 1);
+		b	= plot(t_sim, yPos,  'linewidth', 1);
 		legend([a, b], {'Target Values', 'Simulated Values'});
 		save_figure(fig, savename, 'figures\');
 	end
