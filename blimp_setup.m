@@ -1,17 +1,16 @@
-
+clc
+close all
+clear
 %{
 AAE 421: Fall 2021
 Final Project - Blimp Controller
-
 Contributers:
 	Brendan Gillis	Jeremy Casella	Brandon Dimitri
 	Martino Gogna	Jared DePerna	Jonathan Friedrich
 	Kaustubh Ray	Matt Kim		Saketh Nibhanupudi
-
 Description:
 	Setups and runs the 'blimp_simulation.slx' simulink file
 	with a variety of configuration settings
-
 TODO:
 	- Plot root locus with proportional gain Kp > 0 
 	- Automate pulling stats for SS_error, overshoot and settling time
@@ -26,8 +25,8 @@ TODO:
 %						'altitude hold', 'heading hold' 'circle track'
 
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
-%simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
-%simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
+simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
+simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
 simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
 
 
@@ -38,7 +37,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 
 	% Gains found user PID Tuner
 	[Kp_a, Ki_a, Kd_a, N_a] = deal(38, 16, 74, 1.5);
-	[Kp_h, Ki_h, Kd_h, N_h] = deal(75, 0.05, -11, 3.44);
+	[Kp_h, Ki_h, Kd_h, N_h] = deal(75, .05, -11, 3.44);
 	[Kp_f, Ki_f, Kd_f, N_f] = deal(96, 17, -67.5, 1.1);
 
 	% freq to switch between velo and heading control [hz]
@@ -129,6 +128,18 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		plot(t_goal, ya_goal, t_sim, ya,  'linewidth', 1);
 		legend('Target Values', 'Simulated Values');
 		%save_figure(fig, savename, 'figures\');
+        i = 1;
+        tot_error = 0;
+        for i = 1:length(ya)-1
+            err = target_alt - ya(i);
+            err = err * (t_sim(i+1)-t_sim(i));
+            tot_error = tot_error + err;
+        end
+        avg_error = tot_error/t_sim(i);
+        fprintf("Total Altitude Hold Error = %.2f m*s\n", tot_error)
+        fprintf("Average Altitude Hold Error = %.2f m\n",avg_error)
+        fprintf("\n")
+
 	end
 	
 	if opp_mode == 2 
@@ -143,6 +154,17 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		plot(t_goal, yh_goal, t_sim, yh,  'linewidth', 1);
 		legend('Target Values', 'Simulated Values');
 		%save_figure(fig, savename, 'figures\');
+        i = 1;
+        tot_error = 0;
+        for i = 1:length(yh)-1
+            err = target_head - yh(i);
+            err = err * (t_sim(i+1)-t_sim(i));
+            tot_error = tot_error + err;
+        end
+        avg_error = tot_error/t_sim(i);
+        fprintf("Total Heading Hold Error = %.2f m*s\n", tot_error)
+        fprintf("Average Heading Hold Error = %.2f m\n",avg_error)
+        fprintf("\n")
 	end
 	
 	if opp_mode == 3
@@ -184,6 +206,31 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		b	= plot(t_sim, yPos,  'linewidth', 1);
 		legend([a, b], {'Target Values', 'Simulated Values'});
 		save_figure(fig, savename, 'figures\');
+
+        %Generate the target positions for circle tracking
+        v = .3;
+        r = 8;
+        w = v/r;
+        X_ref = [];
+        Y_ref = [];
+        for t = t_sim
+            x_ref = r*sin(w*t);
+            y_ref = -r*cos(w*t)+r;
+            X_ref = [X_ref,x_ref];
+            Y_ref = [Y_ref,y_ref];
+        end
+
+        %Calculate cumulative error
+        i = 1;
+        tot_error = 0;
+        for i = 1:length(xPos)-1
+            err = sqrt(((xPos(i)-X_ref(i))^2)+((yPos(i)-Y_ref(i))^2));
+            err = err * (t_sim(i+1)-t_sim(i));
+            tot_error = tot_error + err;
+        end
+        avg_error = tot_error/t_sim(i);
+        fprintf("Total Circle Tracking Error = %.2f m*s\n", tot_error)
+        fprintf("Average Circle Tracking Error = %.2f m\n",avg_error)
 	end
 
 end
@@ -206,4 +253,3 @@ function save_figure(fig, name, location)
     print(fig,fullfile(location,name),'-dpng','-r300');       
     set(ax, 'Position', Position);
 end
-
