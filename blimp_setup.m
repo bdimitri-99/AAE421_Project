@@ -43,6 +43,9 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 	% freq to switch between velo and heading control [hz]
 	switch_freq		= 5;
 
+    % Speed Catch Up Multiplier for Circle Tracking, 0 when not circle
+    speed_mult      = 0;
+
 	% Changes weight of heading error
 	switch_weight	= 20;
 
@@ -89,6 +92,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		opp_mode		= 3;   
 		target_alt		= 0;	% [m]
 		target_speed	= 0.3;	% [m/s]
+        speed_mult      = 0.05;
 		slope			= target_speed/radius; % [rad/s]
 		ya_goal			= target_alt * ones(n, 1);
 		yh_goal			= t_goal * slope;
