@@ -27,8 +27,8 @@ TODO:
 
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
 %simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
-%simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
-simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
+simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
+%simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
 
 
 function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
@@ -81,7 +81,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		opp_mode		= 2;
 		target_alt		= 1;	% [m]
 		target_head		= pi/2;	% [rad]
-		target_speed	= 0.3;	% [m/s]
+		target_speed	= 1.3;	% [m/s]
 		ya_goal			= target_alt * ones(n, 1);
 		yh_goal			= target_head * ones(n, 1);
 		yf_goal			= target_speed * ones(n, 1);
@@ -128,7 +128,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		ylabel('Altitude (m)', 'Fontsize', 10);
 		plot(t_goal, ya_goal, t_sim, ya,  'linewidth', 1);
 		legend('Target Values', 'Simulated Values');
-		%save_figure(fig, savename, 'figures\');
+		save_figure(fig, savename, 'figures\');
 	end
 	
 	if opp_mode == 2 
@@ -142,7 +142,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		ylabel('Heading (rad)', 'Fontsize', 10);
 		plot(t_goal, yh_goal, t_sim, yh,  'linewidth', 1);
 		legend('Target Values', 'Simulated Values');
-		%save_figure(fig, savename, 'figures\');
+		save_figure(fig, savename, 'figures\');
 	end
 	
 	if opp_mode == 3
