@@ -26,8 +26,8 @@ TODO:
 
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
 %simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
-%simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
-simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
+simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
+%simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
 
 
 function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
