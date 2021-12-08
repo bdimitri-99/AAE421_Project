@@ -26,8 +26,8 @@ TODO:
 
 % simulate_blimp(part_num, closed_loop, controller_on, t_final,		   opp_mode)
 %simulate_blimp(		 'di',		  true,			 true,     100, 'altitude hold');
-simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
-%simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
+%simulate_blimp(		'dii',		  true,			 true,     100,  'heading hold');
+simulate_blimp(	   'diii',		  true,			 true,     180,  'circle track');
 
 
 function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
@@ -37,11 +37,12 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 
 	% Gains found user PID Tuner
 	[Kp_a, Ki_a, Kd_a, N_a] = deal(38, 16, 74, 1.5);
-	[Kp_h, Ki_h, Kd_h, N_h] = deal(75, 0.05, -11, 3.44);
-	[Kp_f, Ki_f, Kd_f, N_f] = deal(96, 17, -67.5, 1.1);
+	[Kp_h, Ki_h, Kd_h, N_h] = deal(75, 0.05, -11, 0.8);
+	[Kp_f, Ki_f, Kd_f, N_f] = deal(172, 36, -92, 0.35);
+
 
 	% freq to switch between velo and heading control [hz]
-	switch_freq		= 5;
+	switch_freq		= 7;
 
     % Speed Catch Up Multiplier for Circle Tracking, 0 when not circle
     speed_mult      = 0;
@@ -83,7 +84,7 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		opp_mode		= 2;
 		target_alt		= 1;	% [m]
 		target_head		= pi/2;	% [rad]
-		target_speed	= 1.3;	% [m/s]
+		target_speed	= 0.3;	% [m/s]
 		ya_goal			= target_alt * ones(n, 1);
 		yh_goal			= target_head * ones(n, 1);
 		yf_goal			= target_speed * ones(n, 1);
@@ -191,16 +192,20 @@ function simulate_blimp(part_num, closed_loop, controller_on, t_final, opp_mode)
 		y = radius*cos(slope*t_sim+pi)+radius;
 		x = radius*sin(slope*t_sim);
 
-		% 
-		xPos = xPos(t_sim > 40)
-		yPos = yPos(t_sim > 40)
-		x = x(t_sim > 40)
-		y = y(t_sim > 40)
-		t_sim = t_sim(t_sim > 40) - 40;
-
 		buffer = [0; t_sim];
 		error = sum(sqrt((xPos-x).^2 + (yPos-y).^2) .* (t_sim-buffer(1:end-1)))
 		avg_error = error / t_sim(end)
+
+		% 
+		xPos = xPos(t_sim > 40);
+		yPos = yPos(t_sim > 40);
+		x = x(t_sim > 40);
+		y = y(t_sim > 40);
+		t_sim = t_sim(t_sim > 40) - 40;
+
+		buffer = [0; t_sim];
+		SS_error = sum(sqrt((xPos-x).^2 + (yPos-y).^2) .* (t_sim-buffer(1:end-1)));
+		SS_avg_error = SS_error / t_sim(end);
 
 
 	end
